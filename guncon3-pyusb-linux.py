@@ -6,6 +6,17 @@ from libevdev import InputEvent
 from libevdev import InputAbsInfo
 import ctypes
 
+try:
+    controller_number = int(sys.argv[1])
+except IndexError:
+    print ("No controller parameter found: defaulting to first controller")
+    controller_number = 1
+except ValueError:
+    print ("First parameter not a number: defaulting to first controller")
+    controller_number = 1
+
+verbose = "verbose" in sys.argv
+
 CONS_ABS1 = 0x0b
 CONS_ABS2 = 0x0c
 
@@ -103,7 +114,7 @@ def obtain_event(dec):
     abs_y = (-1) * abs_y
     #print("abs_x:" + hex(dec[4]*256+dec[3]) + " abs_y:" + hex(dec[6]*256+dec[5]) + " abs_z:" + hex(dec[8]*256+dec[7]))
     #print("fuera de rango de referencia de la pantalla: " + str((0, 1)[dec[1] & 0x08>0]))
-    #print("Sólo hay una referencia led: " + str((0, 1)[dec[1] & 0x10>0]))    
+    #print("Sólo hay una referencia led: " + str((0, 1)[dec[1] & 0x10>0]))
     abs_rx=dec[11]
     abs_ry=dec[12]
     abs_hat0x=dec[9]
@@ -208,7 +219,14 @@ def guncon3_decode(data, key):
 
 if __name__ == '__main__':
     # find our device
-    dev = usb.core.find(idVendor=0x0b9a, idProduct=0x0800)
+    devs = list(usb.core.find(find_all=True, idVendor=0x0b9a, idProduct=0x0800))
+    try:
+        dev = devs[controller_number-1]
+    except IndexError:
+        print ("Couldn't find controller ",controller_number, " using controller 1")
+        dev = devs[0]
+
+    print ("Using controller", dev)
     x_min_cal = x_max_cal = y_min_cal = y_max_cal = 0
     # was it found?
     if dev is None:
@@ -291,11 +309,12 @@ if __name__ == '__main__':
             #print(dec.hex())
             botones = obtain_event(dec)
             uinput.send_events(botones)
-            print("X:" + str(abs_x_final))
-            print("Y:" + str(abs_y_final))
-            print("PUM!:" + str(btn_trigger_final))
-            print("RECARGA:" + str(btn_0_final))
-            
+            if verbose:
+                print("X:" + str(abs_x_final))
+                print("Y:" + str(abs_y_final))
+                print("PUM!:" + str(btn_trigger_final))
+                print("RECARGA:" + str(btn_0_final))
+
 
         except usb.core.USBError as e:
             if e.errno != 110:
