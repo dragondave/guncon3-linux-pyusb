@@ -8,13 +8,14 @@ python-uinput
 pyusb
 libevdev
 
-#installation
+# Install Prerequisites
 
 `pip3 install python-uinput pyusb libevdev`
 
-# Uso
+# Usage
+
 You have to give permission to read uinput with
-sudo setfacl -m user:username:rw /dev/uinput
+`sudo setfacl -m user:username:rw /dev/uinput`
 where user is the name of the user who will handle the gun
 
 Permissions to enable reading by usb should include the file 
@@ -51,21 +52,23 @@ This will give us the minimum and maximum ranges to apply with evdev-joystick.
 
 Before you have to know the command path for it in terminal mode, we write
 
-evemu-describe
+`evemu-describe`
 
 It will give you output like: 
 
+```
 Available devices:
 
 /dev/input/event11:	4-Axis,9-Button
 
 Select the device event number [0-11]: 
+```
 
-Therefore the path shall be /dev/input/event11
+Therefore the path shall be `/dev/input/event11`
 
 From here it will be written the minimum values that jstest has given
 
-sudo evdev-joystick --evdev /path --axis axis_number -m min_value -M max_value
+`sudo evdev-joystick --evdev /path --axis axis_number -m min_value -M max_value`
 [where path, axis_number, min_value and max_value are variables]
 
 For example, my config is:
@@ -95,6 +98,7 @@ Inside the file there is an option "joystick_deadzone" which is 0.3 by default. 
 
 
 * To calibrate with gnome-video-arcade I have captured the screen in a game and as a perimeter I used the content of the image.
-** The GunCon3 has a bit that is activated when it goes out of the range of the leds go (and the back LED turns on). This is applied to the button 9 that could be used as a reload button in a game.
+
+* The GunCon3 has a bit that is activated when it goes out of the range of the leds go (and the back LED turns on). This is applied to the button 9 that could be used as a reload button in a game.
 
 
