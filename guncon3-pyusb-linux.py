@@ -5,7 +5,8 @@ import time
 from libevdev import InputEvent
 from libevdev import InputAbsInfo
 import ctypes
-
+import imp
+import manip
 try:
     controller_number = int(sys.argv[1])
 except IndexError:
@@ -132,10 +133,16 @@ def obtain_event(dec):
     out_of_reference_range = (0, 1)[dec[1] & 0x08>0]
     abs_x_final = abs_x
     abs_y_final = abs_y
+
+    if btn_3:
+        print ("RELOAD MANIP")
+        imp.reload(manip)
+    abs_x_manip, abs_y_manip = manip.trig(abs_x, abs_y, abs_rx, abs_ry, abs_hat0x, abs_hat0y)
     btn_trigger_final = btn_trigger
     btn_0_final = (0, 1)[dec[1] & 0x08>0]
-    event = [libevdev.InputEvent(libevdev.EV_ABS.ABS_X, abs_x),
-             libevdev.InputEvent(libevdev.EV_ABS.ABS_Y, abs_y),
+
+    event = [libevdev.InputEvent(libevdev.EV_ABS.ABS_X, abs_x_manip),
+             libevdev.InputEvent(libevdev.EV_ABS.ABS_Y, abs_y_manip),
              libevdev.InputEvent(libevdev.EV_ABS.ABS_RX, abs_rx),
              libevdev.InputEvent(libevdev.EV_ABS.ABS_RY, abs_ry),
              libevdev.InputEvent(libevdev.EV_ABS.ABS_THROTTLE, abs_hat0x),
@@ -151,6 +158,7 @@ def obtain_event(dec):
              libevdev.InputEvent(libevdev.EV_KEY.BTN_7, btn_7),
              libevdev.InputEvent(libevdev.EV_KEY.BTN_8, btn_0_final),
              libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)]
+    print (event)
     return event
 
 
