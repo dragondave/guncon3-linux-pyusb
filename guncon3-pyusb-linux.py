@@ -309,7 +309,7 @@ if __name__ == '__main__':
             #print(dec.hex())
             botones = obtain_event(dec)
             uinput.send_events(botones)
-            if verbose:
+            if verbose or btn_trigger_final:
                 print("X:" + str(abs_x_final))
                 print("Y:" + str(abs_y_final))
                 print("PUM!:" + str(btn_trigger_final))
