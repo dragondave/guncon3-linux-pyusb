@@ -137,7 +137,7 @@ def obtain_event(dec):
     if btn_3:
         print ("RELOAD MANIP")
         imp.reload(manip)
-    abs_x_manip, abs_y_manip = manip.trig(abs_x, abs_y, abs_rx, abs_ry, abs_hat0x, abs_hat0y)
+    abs_x_manip, abs_y_manip = manip.trig(abs_x, abs_y, btn_2)
     btn_trigger_final = btn_trigger
     btn_0_final = (0, 1)[dec[1] & 0x08>0]
 
@@ -158,7 +158,6 @@ def obtain_event(dec):
              libevdev.InputEvent(libevdev.EV_KEY.BTN_7, btn_7),
              libevdev.InputEvent(libevdev.EV_KEY.BTN_8, btn_0_final),
              libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)]
-    print (event)
     return event
 
 
