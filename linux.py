@@ -1,16 +1,16 @@
 import sys
 import usb.util
-#import libevdev # WINDOWS
 import time
-#from libevdev import InputEvent # WINDOWS
-#from libevdev import InputAbsInfo # WINDOWS
 import ctypes
 import imp
+import time
 #import manip
 
 WINDOWS = True
+winjoy = None
+timer = 0
+    
 
-if WINDOWS:
 
 class ChecksumError(Exception):
     pass
@@ -50,7 +50,7 @@ KEY_TABLE = bytes([
     0x44, 0x1C, 0xC5, 0x21, 0xDF, 0x61, 0x54, 0xED, 0xA2, 0x81, 0xB7, 0xE5, 0x74, 0x94, 0xB0, 0x47, 0xEE, 0xF1,
     0xA5, 0xBB, 0x21, 0xC8])
 
-def open_dev():
+def open_dev_linux():
     d = libevdev.Device()
     d.name = '4-Axis,9-Button'
     ai = InputAbsInfo(minimum=-32766, maximum=32767, resolution=1)
@@ -74,7 +74,7 @@ def open_dev():
     uinput = d.create_uinput_device()
     return uinput
 
-def open_mouse(x_min,x_max,y_min,y_max):
+def open_mouse_linux(x_min,x_max,y_min,y_max):
     d = libevdev.Device()
     d.name = 'Guncon3_Touch'
     ai = InputAbsInfo(minimum=x_min, maximum=x_max, resolution=1)
@@ -88,6 +88,25 @@ def open_mouse(x_min,x_max,y_min,y_max):
     d.enable(libevdev.EV_KEY.BTN_TOOL_FINGER)
     uinput = d.create_uinput_device()
     return uinput
+
+def open_dev_windows():
+    return pyvjoy.VJoyDevice(1) # TODO multiple joysticks
+
+def open_mouse_windows(*args, **kwargs):
+    pass
+
+
+if WINDOWS:
+    import pyvjoy
+    open_dev = open_dev_windows
+    open_mouse = open_mouse_windows
+    
+else:
+    import libevdev
+    from libevdev import InputEvent
+    from libevdev import InputAbsInfo
+    open_dev = open_dev_linux
+    open_mouse = open_mouse_linux
 
 
 abs_x_ant = int(0)
@@ -152,27 +171,59 @@ def obtain_event(dec):
     btn_0_final = (0, 1)[dec[1] & 0x08>0]
 
     if WINDOWS:
-        print (abs_rx, abs_ry, abs_hat0x, abs_hat0y)
-        return
+        global timer
+        if time.time() > timer+.25:
+            print (abs_rx, abs_ry, abs_hat0x, abs_hat0y)
+            timer = time.time()
+        j = uinput.data  # it's a lie, it's a pyvjoy joystick
+        #j.wAxisX = abs_x_manip
+        #j.wAxisY = abs_y_manip
+        #j.wAxisZ = abs_z
+        uinput.set_axis(0x30, abs_x_manip)
+        uinput.set_axis(0x31, abs_y_manip)
+        uinput.set_axis(0x32, abs_z)
+        uinput.set_axis(0x33, (abs_rx)*128)
+        uinput.set_axis(0x34, (abs_ry)*128)
+        uinput.set_axis(0x35, 0)
+        uinput.set_axis(0x36, (abs_hat0x)*128)
+        uinput.set_axis(0x37, (abs_hat0y)*128)
+        uinput.set_button(1, btn_trigger)
+        uinput.set_button(2, btn_0)
+        uinput.set_button(3, btn_1)
+        uinput.set_button(4, btn_2)
+        uinput.set_button(5, btn_3)
+        uinput.set_button(6, btn_4)
+        uinput.set_button(7, btn_5)
+        uinput.set_button(8, btn_6)
+        uinput.set_button(9, btn_7)
+        uinput.set_button(10, only_one_led_reference)
+        uinput.set_button(11, out_of_reference_range)
+        uinput.set_button(15,1)
+        
+        #j.lButtons 
+        #uinput.update()
+        return None
 
-    event = [libevdev.InputEvent(libevdev.EV_ABS.ABS_X, abs_x_manip),
-             libevdev.InputEvent(libevdev.EV_ABS.ABS_Y, abs_y_manip),
-             libevdev.InputEvent(libevdev.EV_ABS.ABS_RX, abs_rx),
-             libevdev.InputEvent(libevdev.EV_ABS.ABS_RY, abs_ry),
-             libevdev.InputEvent(libevdev.EV_ABS.ABS_THROTTLE, abs_hat0x),
-             libevdev.InputEvent(libevdev.EV_ABS.ABS_RUDDER, abs_hat0y),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_TRIGGER, btn_trigger),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_0, btn_0),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_1, btn_1),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_2, btn_2),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_3, btn_3),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_4, btn_4),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_5, btn_5),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_6, btn_6),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_7, btn_7),
-             libevdev.InputEvent(libevdev.EV_KEY.BTN_8, btn_0_final),
-             libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)]
-    return event
+    else:
+        
+        event = [libevdev.InputEvent(libevdev.EV_ABS.ABS_X, abs_x_manip),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_Y, abs_y_manip),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_RX, abs_rx),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_RY, abs_ry),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_THROTTLE, abs_hat0x),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_RUDDER, abs_hat0y),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_TRIGGER, btn_trigger),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_0, btn_0),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_1, btn_1),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_2, btn_2),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_3, btn_3),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_4, btn_4),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_5, btn_5),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_6, btn_6),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_7, btn_7),
+                libevdev.InputEvent(libevdev.EV_KEY.BTN_8, btn_0_final),
+                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)]
+        return event
 
 
 def guncon3_decode(data, key):
@@ -303,8 +354,7 @@ if __name__ == '__main__':
     key = bytes([0x01, 0x12, 0x6F, 0x32, 0x24, 0x60, 0x17, 0x21]) # was 21
     epout.write(key)
     data = dev.read(epin.bEndpointAddress, epin.wMaxPacketSize, timeout=100)
-    if not WINDOWS:
-        uinput = open_dev()
+    uinput = open_dev()  
 
     while True:
         try:
@@ -329,7 +379,7 @@ if __name__ == '__main__':
             data_byte.append(data[13])
             data_byte.append(data[14])
             dec = guncon3_decode(data_byte, key)
-            print("hex", dec.hex())
+            #print("hex", dec.hex())
             botones = obtain_event(dec)
             if not WINDOWS:
                 uinput.send_events(botones)

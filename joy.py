@@ -14,6 +14,14 @@ j.set_axis(pyvjoy.HID_USAGE_X, 0x1)
 
 #Set X axis to fully right
 j.set_axis(pyvjoy.HID_USAGE_X, 0x8000)
+j.set_axis(pyvjoy.HID_USAGE_RX, 0x7000)
+j.set_axis(pyvjoy.HID_USAGE_SL1, 0x6000)
+j.set_axis(pyvjoy.HID_USAGE_SL0, 0x5000)
+#j.set_axis(pyvjoy.HID_USAGE_POV, 0x3)
+
+print (":)")
+while True:
+    pass
 
 #Also implemented:
 
@@ -24,7 +32,12 @@ j.set_axis(pyvjoy.HID_USAGE_X, 0x8000)
 
 #The 'efficient' method as described in vJoy's docs - set multiple values at once
 
+"""
+
+
 i=0
+print (j.data)
+exit()
 while True:
     i = i + 1
     sleep(.1)
@@ -34,3 +47,4 @@ while True:
 
 #send data to vJoy device
     j.update()
+"""
