@@ -16,14 +16,15 @@ class ChecksumError(Exception):
     pass
 
 
-try:
-    controller_number = int(sys.argv[1])
-except IndexError:
+if len(sys.argv) == 1:
     print ("No controller parameter found: defaulting to first controller")
     controller_number = 1
-except ValueError:
-    print ("First parameter not a number: defaulting to first controller")
-    controller_number = 1
+else:
+    try:
+        controller_number = int(sys.argv[1])
+    except ValueError:
+        print ("First parameter not a number: defaulting to first controller")
+        controller_number = 1
 
 verbose = "verbose" in sys.argv
 
@@ -166,6 +167,8 @@ def obtain_event(dec):
         print ("RELOAD MANIP")
         imp.reload(manip)
     abs_x_manip, abs_y_manip = manip.trig(abs_x, abs_y, btn_2)
+    print ("in", abs_x, abs_y)
+    print ("out", abs_x_manip, abs_y_manip)
     # abs_x_manip, abs_y_manip = abs_x, abs_y # placeholder no calibration
     btn_trigger_final = btn_trigger
     btn_0_final = (0, 1)[dec[1] & 0x08>0]
@@ -175,9 +178,10 @@ def obtain_event(dec):
         if time.time() > timer+.25:
             print (abs_rx, abs_ry, abs_hat0x, abs_hat0y)
             timer = time.time()
-        uinput.set_axis(0x30, abs_x_manip) 
-        uinput.set_axis(0x31, abs_y_manip)
-        uinput.set_axis(0x32, abs_z)
+        print("VALUE: ", abs_x_manip, abs_y_manip)
+        uinput.set_axis(0x30, abs_x_manip)#+16384) 
+        uinput.set_axis(0x31, abs_y_manip)#+16384)
+        uinput.set_axis(0x32, abs_z)#+16384)
         uinput.set_axis(0x33, abs_rx*128)
         uinput.set_axis(0x34, abs_ry*128)
         uinput.set_axis(0x35, 0)
@@ -346,12 +350,12 @@ if __name__ == '__main__':
     # write data ep
     key = bytes([0x01, 0x12, 0x6F, 0x32, 0x24, 0x60, 0x17, 0x21]) # was 21
     epout.write(key)
-    data = dev.read(epin.bEndpointAddress, epin.wMaxPacketSize, timeout=100)
+    data = dev.read(epin.bEndpointAddress, epin.wMaxPacketSize, timeout=1000) # was 100
     uinput = open_dev()  
 
     while True:
         try:
-            data = dev.read(epin.bEndpointAddress, epin.wMaxPacketSize, timeout=100)
+            data = dev.read(epin.bEndpointAddress, epin.wMaxPacketSize, timeout=1000) # was 100
             #print("raw data:")
             #print(data)
             #calibracion
@@ -381,10 +385,8 @@ if __name__ == '__main__':
                 print("Y:" + str(abs_y_final))
                 print("PUM!:" + str(btn_trigger_final))
                 print("RECARGA:" + str(btn_0_final))
-
-
-        except usb.core.USBError as e:
-            if e.errno != 110 and "timeout error" not in str(e):
-                sys.exit("Error readin data: %s" % str(e))
+        # TODO better exception cehecking: USBError("[Error 10060] Operation timed out")
+        except Exception as e:
+            print (repr(e))
             
             
