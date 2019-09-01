@@ -4,7 +4,7 @@ import time
 import ctypes
 import imp
 import time
-#import manip
+import manip
 
 WINDOWS = True
 winjoy = None
@@ -162,11 +162,11 @@ def obtain_event(dec):
     abs_x_final = abs_x
     abs_y_final = abs_y
 
-    #if btn_3:
-    #    print ("RELOAD MANIP")
-    #    imp.reload(manip)
-    #abs_x_manip, abs_y_manip = manip.trig(abs_x, abs_y, btn_2)
-    abs_x_manip, abs_y_manip = abs_x, abs_y
+    if btn_3:
+        print ("RELOAD MANIP")
+        imp.reload(manip)
+    abs_x_manip, abs_y_manip = manip.trig(abs_x, abs_y, btn_2)
+    # abs_x_manip, abs_y_manip = abs_x, abs_y # placeholder no calibration
     btn_trigger_final = btn_trigger
     btn_0_final = (0, 1)[dec[1] & 0x08>0]
 
@@ -175,18 +175,14 @@ def obtain_event(dec):
         if time.time() > timer+.25:
             print (abs_rx, abs_ry, abs_hat0x, abs_hat0y)
             timer = time.time()
-        j = uinput.data  # it's a lie, it's a pyvjoy joystick
-        #j.wAxisX = abs_x_manip
-        #j.wAxisY = abs_y_manip
-        #j.wAxisZ = abs_z
-        uinput.set_axis(0x30, abs_x_manip)
+        uinput.set_axis(0x30, abs_x_manip) 
         uinput.set_axis(0x31, abs_y_manip)
         uinput.set_axis(0x32, abs_z)
-        uinput.set_axis(0x33, (abs_rx)*128)
-        uinput.set_axis(0x34, (abs_ry)*128)
+        uinput.set_axis(0x33, abs_rx*128)
+        uinput.set_axis(0x34, abs_ry*128)
         uinput.set_axis(0x35, 0)
-        uinput.set_axis(0x36, (abs_hat0x)*128)
-        uinput.set_axis(0x37, (abs_hat0y)*128)
+        uinput.set_axis(0x36, abs_hat0x*128)
+        uinput.set_axis(0x37, abs_hat0y*128)
         uinput.set_button(1, btn_trigger)
         uinput.set_button(2, btn_0)
         uinput.set_button(3, btn_1)
@@ -198,10 +194,7 @@ def obtain_event(dec):
         uinput.set_button(9, btn_7)
         uinput.set_button(10, only_one_led_reference)
         uinput.set_button(11, out_of_reference_range)
-        uinput.set_button(15,1)
-        
-        #j.lButtons 
-        #uinput.update()
+        uinput.set_button(15,1)  # only 8 show up :(
         return None
 
     else:
