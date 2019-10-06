@@ -1,0 +1,13 @@
+Install:
+
+zadig.akeo.ie -- Run once, select device and install libusbK driver for it
+sourceforge.net/projects/vjoystick/files/latest/download -- install
+Anaconda python -- install
+mame -- install, set joystick deadzone to 0 (and saturation to 1?)
+
+In anaconda python:
+
+set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1
+conda update freetype
+conda install opencv
+pip install pyusb
